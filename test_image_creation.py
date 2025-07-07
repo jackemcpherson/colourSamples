@@ -17,7 +17,15 @@ def test_successful_image_creation(tmp_path: Path) -> None:
     width, height, color_code = 100, 100, "#FF5733"
     output_dir = tmp_path / "output_files"
     create_image(width, height, color_code, output_dir)
-    assert (output_dir / "FF5733.jpg").exists()
+    img_path = output_dir / "FF5733.jpg"
+    assert img_path.exists()
+    img = Image.open(img_path)
+    assert img.size == (width, height)
+    assert img.getpixel((0, 0)) == (
+        int(color_code[1:3], 16),
+        int(color_code[3:5], 16),
+        int(color_code[5:7], 16),
+    )
 
 
 def test_invalid_width_height() -> None:
