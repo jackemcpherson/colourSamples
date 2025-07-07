@@ -1,6 +1,6 @@
 from PIL import Image
 import os
-from typing import Tuple, Optional
+from typing import Optional
 from pathlib import Path
 
 
