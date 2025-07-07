@@ -72,3 +72,11 @@ def test_output_directory_creation(tmp_path: Path) -> None:
     output_dir = tmp_path / "output_files"
     create_image(width, height, color_code, output_dir)
     assert output_dir.exists()
+
+
+def test_string_output_dir(tmp_path: Path) -> None:
+    """Ensure create_image works when output_dir is provided as a string."""
+    width, height, color_code = 50, 50, "#00FF00"
+    output_dir = tmp_path / "string_output"
+    create_image(width, height, color_code, str(output_dir))
+    assert (output_dir / "00FF00.jpg").exists()
