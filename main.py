@@ -1,11 +1,14 @@
 from PIL import Image
 import os
-from typing import Optional
+from typing import Optional, Union
 from pathlib import Path
 
 
 def create_image(
-    width: int, height: int, color_code: str, output_dir: Optional[Path] = None
+    width: int,
+    height: int,
+    color_code: str,
+    output_dir: Optional[Union[str, Path]] = None,
 ) -> None:
     """
     Create and save an image with the specified dimensions and color.
@@ -14,7 +17,9 @@ def create_image(
         width (int): The width of the image in pixels.
         height (int): The height of the image in pixels.
         color_code (str): The HTML color code for the image background.
-        output_dir (Optional[Path]): The directory to save the image. Defaults to "output_files".
+        output_dir (Optional[Union[str, Path]]):
+            The directory to save the image. Accepts a string path or
+            ``pathlib.Path``. Defaults to "output_files".
 
     Returns:
         None
@@ -30,6 +35,10 @@ def create_image(
     # Set the default output directory if not provided
     if output_dir is None:
         output_dir = Path("output_files")
+
+    # Convert string paths to Path objects
+    if isinstance(output_dir, str):
+        output_dir = Path(output_dir)
 
     # Create an image with the given color
     img = Image.new("RGB", (width, height), color=color_code)
