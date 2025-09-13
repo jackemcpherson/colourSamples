@@ -1,11 +1,116 @@
 # colourSamples
 
-This Python script generates a JPEG image of a specified size and color.
+A Python utility for generating JPEG images with specified dimensions and colors.
 
-You will be prompted to enter the width and height of the image, and the color code in HTML format (e.g., #FFFFFF for white).
+## Getting Started
 
-The script will create an image of the specified size and color, and save it as a JPEG file in the output_files directory. The filename will be the color code without the leading '#'.
+### Installation
+
+Install the package and its dependencies using uv:
+
+```bash
+# Install uv if you haven't already
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install the package in development mode
+uv pip install -e ".[dev]"
+```
+
+Alternatively, install dependencies manually:
+
+```bash
+pip install Pillow pytest ruff
+```
+
+### Usage
+
+#### Interactive Mode
+
+Run the interactive script:
+
+```bash
+python -m coloursamples.core
+```
+
+You will be prompted to enter:
+- Width of the image (in pixels)
+- Height of the image (in pixels)  
+- Color code in HTML format (e.g., #FFFFFF for white)
+
+#### Programmatic Usage
+
+```python
+from coloursamples import create_image
+
+# Create a 500x300 red image
+create_image(500, 300, "#FF0000")
+
+# Create an image in a specific directory
+create_image(100, 100, "#00FF00", "my_output_dir")
+```
+
+The function will create an image of the specified size and color, and save it as a JPEG file. The filename will be the color code without the leading '#'.
+
+## Running Tests
+
+Run all tests:
+
+```bash
+pytest
+```
+
+Run tests with verbose output:
+
+```bash
+pytest -v
+```
+
+Run a specific test file:
+
+```bash
+pytest tests/test_core.py
+```
+
+## Development Setup
+
+### Code Formatting and Linting
+
+This project uses ruff for code formatting and linting:
+
+```bash
+# Check code style
+ruff check .
+
+# Format code
+ruff format .
+```
+
+### Project Structure
+
+```
+colourSamples/
+├── src/
+│   └── coloursamples/
+│       ├── __init__.py
+│       └── core.py           # Main image creation functionality
+├── tests/
+│   ├── __init__.py
+│   └── test_core.py          # Test suite
+├── docs/                     # Documentation
+├── logs/                     # Log files
+├── pyproject.toml            # Project configuration
+├── README.md                 # This file
+└── .gitignore               # Git ignore rules
+```
 
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+Please ensure tests pass and code is formatted before submitting:
+
+```bash
+pytest
+ruff check .
+ruff format .
+```
