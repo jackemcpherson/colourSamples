@@ -73,12 +73,3 @@ def _ensure_directory_exists(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    try:
-        width = int(input("Enter the width of the image: "))
-        height = int(input("Enter the height of the image: "))
-        color = input("Enter the color code (in HTML format): ")
-        create_image(width, height, color)
-    except ValueError as e:
-        logger.error("Invalid input: %s", e)
