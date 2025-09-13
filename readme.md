@@ -24,18 +24,30 @@ pip install Pillow pytest ruff
 
 ### Usage
 
-#### Interactive Mode
+#### Command Line Interface
 
-Run the interactive script:
+The package provides a modern CLI with rich formatting and helpful options:
 
 ```bash
-python -m coloursamples.core
-```
+# Direct command with arguments
+coloursamples create 800 600 "#FF5733"
 
-You will be prompted to enter:
-- Width of the image (in pixels)
-- Height of the image (in pixels)  
-- Color code in HTML format (e.g., #FFFFFF for white)
+# With custom output directory
+coloursamples create 400 300 "3498db" --output-dir ./my_images
+
+# Interactive mode with prompts and defaults
+coloursamples create --interactive
+
+# Verbose logging for debugging
+coloursamples create 200 150 "#8E44AD" --verbose
+
+# Get help
+coloursamples --help
+coloursamples create --help
+
+# Display tool information
+coloursamples info
+```
 
 #### Programmatic Usage
 
@@ -92,13 +104,14 @@ colourSamples/
 ├── src/
 │   └── coloursamples/
 │       ├── __init__.py
-│       └── core.py           # Main image creation functionality
+│       ├── core.py           # Main image creation functionality
+│       └── cli.py            # Modern typer-based CLI
 ├── tests/
 │   ├── __init__.py
 │   └── test_core.py          # Test suite
 ├── docs/                     # Documentation
 ├── logs/                     # Log files
-├── pyproject.toml            # Project configuration
+├── pyproject.toml            # Project configuration with console scripts
 ├── README.md                 # This file
 └── .gitignore               # Git ignore rules
 ```
