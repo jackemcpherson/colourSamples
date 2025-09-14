@@ -247,7 +247,7 @@ def info() -> None:
     """Display information about the coloursamples tool."""
     console.print(
         Panel.fit(
-            "[bold cyan]Colour Samples[/bold cyan] v0.1.2\n\n"
+            "[bold cyan]Colour Samples[/bold cyan] v0.1.3\n\n"
             "A Python utility for generating JPEG images with specified "
             "dimensions and colours.\n\n"
             "[bold]Repository:[/bold] https://github.com/jackemcpherson/colourSamples\n"
