@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 app = typer.Typer(
     name="coloursamples",
-    help="Generate JPEG images with specified dimensions and colors.",
+    help="Generate JPEG images with specified dimensions and colours.",
     no_args_is_help=True,
 )
 console = Console()
@@ -29,74 +29,69 @@ def _setup_logging(verbose: bool = False) -> None:
     """
     level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(
-        level=level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
     logger.info("Logging configured with level: %s", logging.getLevelName(level))
 
 
-def _validate_color_format(color: str) -> str:
-    """Validate and normalize color code format.
+def _validate_colour_format(colour: str) -> str:
+    """Validate and normalize colour code format.
 
     Args:
-        color: Raw color code input from user.
+        colour: Raw colour code input from user.
 
     Returns:
-        Normalized color code in uppercase with # prefix.
+        Normalized colour code in uppercase with # prefix.
 
     Raises:
-        typer.BadParameter: If color format is invalid.
+        typer.BadParameter: If colour format is invalid.
     """
-    if not color.startswith("#"):
-        color = f"#{color}"
+    if not colour.startswith("#"):
+        colour = f"#{colour}"
 
-    if len(color) != 7:
+    if len(colour) != 7:
         raise typer.BadParameter(
-            f"Color code must be 6 hex characters (got {len(color) - 1}). "
+            f"Colour code must be 6 hex characters (got {len(colour) - 1}). "
             f"Example: #FF5733 or FF5733"
         )
 
     try:
-        int(color[1:], 16)
+        int(colour[1:], 16)
     except ValueError as e:
         raise typer.BadParameter(
-            f"Invalid hex color code: {color}. "
+            f"Invalid hex colour code: {colour}. "
             f"Must contain only hex digits (0-9, A-F). Example: #FF5733"
         ) from e
 
-    return color.upper()
+    return colour.upper()
 
 
 def _interactive_mode() -> tuple[int, int, str]:
     """Run interactive mode to collect user input.
 
     Returns:
-        Tuple of (width, height, color) from user input.
+        Tuple of (width, height, colour) from user input.
     """
-    console.print(Panel.fit(
-        "[bold cyan]Interactive Image Creator[/bold cyan]\n"
-        "Enter image dimensions and color",
-        border_style="cyan"
-    ))
+    console.print(
+        Panel.fit(
+            "[bold cyan]Interactive Image Creator[/bold cyan]\n"
+            "Enter image dimensions and colour",
+            border_style="cyan",
+        )
+    )
 
     width = IntPrompt.ask(
-        "[bold]Image width[/bold] (pixels)",
-        default=800,
-        show_default=True
+        "[bold]Image width[/bold] (pixels)", default=800, show_default=True
     )
     height = IntPrompt.ask(
-        "[bold]Image height[/bold] (pixels)",
-        default=600,
-        show_default=True
+        "[bold]Image height[/bold] (pixels)", default=600, show_default=True
     )
 
-    color = Prompt.ask(
-        "[bold]Color code[/bold] (hex format)",
-        default="#3498db",
-        show_default=True
+    colour = Prompt.ask(
+        "[bold]Colour code[/bold] (hex format)", default="#3498db", show_default=True
     )
 
-    return width, height, color
+    return width, height, colour
 
 
 def _validate_input_parameters(width: int, height: int) -> None:
@@ -116,7 +111,7 @@ def _validate_input_parameters(width: int, height: int) -> None:
 
 
 def _handle_input_collection(
-    interactive: bool, width: int | None, height: int | None, color: str | None
+    interactive: bool, width: int | None, height: int | None, colour: str | None
 ) -> tuple[int, int, str]:
     """Handle input collection from arguments or interactive mode.
 
@@ -124,92 +119,99 @@ def _handle_input_collection(
         interactive: Whether to force interactive mode.
         width: Width from command line arguments or None.
         height: Height from command line arguments or None.
-        color: Color from command line arguments or None.
+        colour: Colour from command line arguments or None.
 
     Returns:
-        Tuple of (width, height, color) from arguments or interactive input.
+        Tuple of (width, height, colour) from arguments or interactive input.
     """
-    if interactive or not all([width, height, color]):
-        if not interactive and (width or height or color):
+    if interactive or not all([width, height, colour]):
+        if not interactive and (width or height or colour):
             console.print(
                 "[yellow]Warning:[/yellow] Some arguments provided but not all. "
                 "Use --interactive or provide all three arguments.",
-                style="yellow"
+                style="yellow",
             )
         return _interactive_mode()
-    return width, height, color
+    return width, height, colour
 
 
 def _create_and_save_image(
-    width: int, height: int, color: str, output_dir: Path | None
+    width: int, height: int, colour: str, output_dir: Path | None
 ) -> None:
     """Create and save the image with status indicator.
 
     Args:
         width: Image width in pixels.
         height: Image height in pixels.
-        color: Normalized color code with # prefix.
+        colour: Normalized colour code with # prefix.
         output_dir: Directory to save image or None for default.
     """
     with console.status(f"[bold green]Creating {width}x{height} image..."):
-        create_image(width, height, color, output_dir)
+        create_image(width, height, colour, output_dir)
 
 
 def _display_success_message(
-    width: int, height: int, color: str, output_dir: Path | None
+    width: int, height: int, colour: str, output_dir: Path | None
 ) -> None:
     """Display formatted success message with image details.
 
     Args:
         width: Image width in pixels.
         height: Image height in pixels.
-        color: Normalized color code with # prefix.
+        colour: Normalized colour code with # prefix.
         output_dir: Directory where image was saved or None for default.
     """
     output_path = output_dir or Path("output_files")
-    filename = color.lstrip("#") + ".jpg"
+    filename = colour.lstrip("#") + ".jpg"
     full_path = output_path / filename
 
-    console.print(Panel.fit(
-        f"[bold green]✓ Image created successfully![/bold green]\n\n"
-        f"[bold]Dimensions:[/bold] {width}x{height} pixels\n"
-        f"[bold]Color:[/bold] {color}\n"
-        f"[bold]Saved to:[/bold] {full_path}",
-        border_style="green",
-        title="Success"
-    ))
+    console.print(
+        Panel.fit(
+            f"[bold green]✓ Image created successfully![/bold green]\n\n"
+            f"[bold]Dimensions:[/bold] {width}x{height} pixels\n"
+            f"[bold]Colour:[/bold] {colour}\n"
+            f"[bold]Saved to:[/bold] {full_path}",
+            border_style="green",
+            title="Success",
+        )
+    )
 
 
 @app.command()
 def create(
-    width: Annotated[int | None, typer.Argument(
-        help="Width of the image in pixels (1-10000)"
-    )] = None,
-    height: Annotated[int | None, typer.Argument(
-        help="Height of the image in pixels (1-10000)"
-    )] = None,
-    color: Annotated[str | None, typer.Argument(
-        help="Hex color code (e.g., #FF5733 or FF5733)"
-    )] = None,
-    output_dir: Annotated[Path | None, typer.Option(
-        "--output-dir", "-o",
-        help="Directory to save the image (default: output_files)"
-    )] = None,
-    interactive: Annotated[bool, typer.Option(
-        "--interactive", "-i",
-        help="Run in interactive mode with prompts"
-    )] = False,
-    verbose: Annotated[bool, typer.Option(
-        "--verbose", "-v",
-        help="Enable verbose logging"
-    )] = False,
+    width: Annotated[
+        int | None, typer.Argument(help="Width of the image in pixels (1-10000)")
+    ] = None,
+    height: Annotated[
+        int | None, typer.Argument(help="Height of the image in pixels (1-10000)")
+    ] = None,
+    colour: Annotated[
+        str | None, typer.Argument(help="Hex colour code (e.g., #FF5733 or FF5733)")
+    ] = None,
+    output_dir: Annotated[
+        Path | None,
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Directory to save the image (default: output_files)",
+        ),
+    ] = None,
+    interactive: Annotated[
+        bool,
+        typer.Option(
+            "--interactive", "-i", help="Run in interactive mode with prompts"
+        ),
+    ] = False,
+    verbose: Annotated[
+        bool, typer.Option("--verbose", "-v", help="Enable verbose logging")
+    ] = False,
 ) -> None:
-    """Create a JPEG image with specified dimensions and color.
+    """Create a JPEG image with specified dimensions and colour.
 
     Args:
         width: Width of the image in pixels (1-10000) or None for interactive.
         height: Height of the image in pixels (1-10000) or None for interactive.
-        color: Hex color code (e.g., #FF5733) or None for interactive.
+        colour: Hex colour code (e.g., #FF5733) or None for interactive.
         output_dir: Directory to save the image or None for default.
         interactive: Force interactive mode with prompts.
         verbose: Enable verbose logging output.
@@ -225,16 +227,17 @@ def create(
     _setup_logging(verbose)
 
     try:
-        width, height, color = _handle_input_collection(
-            interactive, width, height, color
+        width, height, colour = _handle_input_collection(
+            interactive, width, height, colour
         )
         _validate_input_parameters(width, height)
 
-        normalized_color = _validate_color_format(color)
-        _create_and_save_image(width, height, normalized_color, output_dir)
-        _display_success_message(width, height, normalized_color, output_dir)
+        normalised_colour = _validate_colour_format(colour)
+        _create_and_save_image(width, height, normalised_colour, output_dir)
+        _display_success_message(width, height, normalised_colour, output_dir)
 
     except Exception as e:
+        logger.exception("Image creation failed: %s", e)
         console.print(f"[bold red]Error:[/bold red] {e}", style="red")
         raise typer.Exit(1) from e
 
@@ -242,15 +245,17 @@ def create(
 @app.command()
 def info() -> None:
     """Display information about the coloursamples tool."""
-    console.print(Panel.fit(
-        "[bold cyan]Colour Samples[/bold cyan] v0.1.0\n\n"
-        "A Python utility for generating JPEG images with specified "
-        "dimensions and colors.\n\n"
-        "[bold]Repository:[/bold] https://github.com/jackemcpherson/colourSamples\n"
-        "[bold]Documentation:[/bold] See README.md for detailed usage",
-        border_style="cyan",
-        title="Info"
-    ))
+    console.print(
+        Panel.fit(
+            "[bold cyan]Colour Samples[/bold cyan] v0.1.1\n\n"
+            "A Python utility for generating JPEG images with specified "
+            "dimensions and colours.\n\n"
+            "[bold]Repository:[/bold] https://github.com/jackemcpherson/colourSamples\n"
+            "[bold]Documentation:[/bold] See README.md for detailed usage",
+            border_style="cyan",
+            title="Info",
+        )
+    )
 
 
 def main() -> None:
@@ -260,4 +265,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

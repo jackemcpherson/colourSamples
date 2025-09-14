@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "coloursamples"
-version = "0.1.0"
-description = "Python utility for generating JPEG images with specified dimensions and colors"
+version = "0.1.1"
+description = "Python utility for generating JPEG images with specified dimensions and colours"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
@@ -13,6 +13,11 @@ dependencies = [
     "typer>=0.9.0",
     "rich>=13.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/jackemcpherson/colourSamples"
+Repository = "https://github.com/jackemcpherson/colourSamples"
+"Bug Tracker" = "https://github.com/jackemcpherson/colourSamples/issues"
 
 [project.scripts]
 coloursamples = "coloursamples.cli:main"
