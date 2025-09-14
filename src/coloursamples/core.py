@@ -5,6 +5,13 @@ from pathlib import Path
 
 from PIL import Image
 
+from .exceptions import (
+    FileSystemError,
+    ImageCreationError,
+    InvalidColourCodeError,
+    InvalidDimensionsError,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -24,7 +31,10 @@ def create_image(
             pathlib.Path. Defaults to "output_files".
 
     Raises:
-        ValueError: If width/height are not positive or colour_code is invalid.
+        InvalidDimensionsError: If width/height are not positive or exceed limits.
+        InvalidColourCodeError: If colour_code format is invalid.
+        FileSystemError: If directory creation or file saving fails.
+        ImageCreationError: If PIL image creation fails.
     """
     _validate_dimensions(width, height)
     _validate_colour_code(colour_code)
@@ -32,28 +42,62 @@ def create_image(
     output_path = _resolve_output_path(output_dir)
     filename = _generate_filename(colour_code)
 
-    image = Image.new("RGB", (width, height), color=colour_code)
+    try:
+        image = Image.new("RGB", (width, height), color=colour_code)
+    except ValueError as e:
+        raise ImageCreationError(f"Failed to create image: {e}") from e
+
     _ensure_directory_exists(output_path)
 
     full_path = output_path / f"{filename}.jpg"
-    image.save(full_path)
-    logger.info("Image saved to %s", full_path)
+    try:
+        image.save(full_path)
+        logger.info("Image saved to %s", full_path)
+    except OSError as e:
+        raise FileSystemError(f"Failed to save image to {full_path}: {e}") from e
 
 
 def _validate_dimensions(width: int, height: int) -> None:
-    """Validate that image dimensions are positive integers."""
+    """Validate that image dimensions are positive integers within limits.
+
+    Raises:
+        InvalidDimensionsError: If dimensions are invalid.
+    """
     if width <= 0 or height <= 0:
-        raise ValueError("Width and height must be positive integers.")
+        raise InvalidDimensionsError("Width and height must be positive integers")
+
+    if width > 10000 or height > 10000:
+        raise InvalidDimensionsError("Width and height must be 10000 pixels or less")
 
 
 def _validate_colour_code(colour_code: str) -> None:
-    """Validate that colour code is in proper HTML hex format."""
-    if not isinstance(colour_code, str) or not colour_code.startswith("#"):
-        raise ValueError(
-            "Colour code must be a string in HTML format, starting with '#'."
+    """Validate that colour code is in proper HTML hex format.
+
+    Raises:
+        InvalidColourCodeError: If colour code format is invalid.
+    """
+    if not isinstance(colour_code, str):
+        raise InvalidColourCodeError("Colour code must be a string. Example: #FF5733")
+
+    if not colour_code.startswith("#"):
+        raise InvalidColourCodeError(
+            "Colour code must start with '#'. Example: #FF5733"
         )
+
     if len(colour_code) != 7:
-        raise ValueError("Colour code must be exactly 7 characters (#RRGGBB).")
+        raise InvalidColourCodeError(
+            f"Colour code must be exactly 7 characters (got {len(colour_code)}). "
+            f"Example: #FF5733"
+        )
+
+    hex_part = colour_code[1:]
+    try:
+        int(hex_part, 16)
+    except ValueError as e:
+        raise InvalidColourCodeError(
+            f"Invalid hex colour code: {colour_code}. "
+            f"Must contain only hex digits (0-9, A-F). Example: #FF5733"
+        ) from e
 
 
 def _resolve_output_path(output_dir: str | Path | None) -> Path:
@@ -69,5 +113,12 @@ def _generate_filename(colour_code: str) -> str:
 
 
 def _ensure_directory_exists(path: Path) -> None:
-    """Create directory if it doesn't exist."""
-    path.mkdir(parents=True, exist_ok=True)
+    """Create directory if it doesn't exist.
+
+    Raises:
+        FileSystemError: If directory creation fails.
+    """
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+    except (OSError, PermissionError) as e:
+        raise FileSystemError(f"Failed to create directory {path}: {e}") from e
