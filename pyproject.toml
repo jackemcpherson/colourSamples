@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "coloursamples"
-version = "0.1.1"
+version = "0.1.3"
 description = "Python utility for generating JPEG images with specified dimensions and colours"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -34,12 +34,37 @@ target-version = "py38"
 src = ["src"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "B", "UP"]
+select = ["E", "F", "W", "I", "N", "B", "UP", "D"]
 ignore = []
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v"
+addopts = "-v --cov=coloursamples --cov-report=term-missing --cov-fail-under=80"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_also = [
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=5.0.0",
+]
