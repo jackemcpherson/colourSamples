@@ -34,8 +34,11 @@ target-version = "py38"
 src = ["src"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "B", "UP"]
+select = ["E", "F", "W", "I", "N", "B", "UP", "D"]
 ignore = []
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,3 +1,5 @@
+"""Tests for coloursamples core functionality."""
+
 from pathlib import Path
 
 import pytest
