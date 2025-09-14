@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "coloursamples"
-version = "0.1.1"
+version = "0.1.2"
 description = "Python utility for generating JPEG images with specified dimensions and colours"
 readme = "README.md"
 requires-python = ">=3.8"
