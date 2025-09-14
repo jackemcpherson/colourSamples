@@ -9,7 +9,13 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import IntPrompt, Prompt
 
+from . import __version__
 from .core import create_image
+from .exceptions import (
+    ColourSamplesError,
+    InvalidColourCodeError,
+    InvalidDimensionsError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +50,13 @@ def _validate_colour_format(colour: str) -> str:
         Normalized colour code in uppercase with # prefix.
 
     Raises:
-        typer.BadParameter: If colour format is invalid.
+        InvalidColourCodeError: If colour format is invalid.
     """
     if not colour.startswith("#"):
         colour = f"#{colour}"
 
     if len(colour) != 7:
-        raise typer.BadParameter(
+        raise InvalidColourCodeError(
             f"Colour code must be 6 hex characters (got {len(colour) - 1}). "
             f"Example: #FF5733 or FF5733"
         )
@@ -58,7 +64,7 @@ def _validate_colour_format(colour: str) -> str:
     try:
         int(colour[1:], 16)
     except ValueError as e:
-        raise typer.BadParameter(
+        raise InvalidColourCodeError(
             f"Invalid hex colour code: {colour}. "
             f"Must contain only hex digits (0-9, A-F). Example: #FF5733"
         ) from e
@@ -102,12 +108,12 @@ def _validate_input_parameters(width: int, height: int) -> None:
         height: Image height in pixels.
 
     Raises:
-        typer.BadParameter: If width or height are outside valid range.
+        InvalidDimensionsError: If width or height are outside valid range.
     """
     if width <= 0 or width > 10000:
-        raise typer.BadParameter("Width must be between 1 and 10000 pixels")
+        raise InvalidDimensionsError("Width must be between 1 and 10000 pixels")
     if height <= 0 or height > 10000:
-        raise typer.BadParameter("Height must be between 1 and 10000 pixels")
+        raise InvalidDimensionsError("Height must be between 1 and 10000 pixels")
 
 
 def _handle_input_collection(
@@ -123,15 +129,27 @@ def _handle_input_collection(
 
     Returns:
         Tuple of (width, height, colour) from arguments or interactive input.
+
+    Raises:
+        InvalidDimensionsError: If arguments are missing and not in interactive mode.
     """
-    if interactive or not all([width, height, colour]):
-        if not interactive and (width or height or colour):
-            console.print(
-                "[yellow]Warning:[/yellow] Some arguments provided but not all. "
-                "Use --interactive or provide all three arguments.",
-                style="yellow",
-            )
+    if interactive:
         return _interactive_mode()
+
+    if width is None or height is None or colour is None:
+        missing_args = []
+        if width is None:
+            missing_args.append("width")
+        if height is None:
+            missing_args.append("height")
+        if colour is None:
+            missing_args.append("colour")
+
+        raise InvalidDimensionsError(
+            f"Missing required arguments: {', '.join(missing_args)}. "
+            f"Use --interactive or provide all three arguments."
+        )
+
     return width, height, colour
 
 
@@ -236,10 +254,20 @@ def create(
         _create_and_save_image(width, height, normalised_colour, output_dir)
         _display_success_message(width, height, normalised_colour, output_dir)
 
+    except ColourSamplesError as e:
+        console.print(f"[bold red]Error:[/bold red] {e.message}", style="red")
+        raise typer.Exit(1) from None
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Operation cancelled by user[/yellow]", style="yellow")
+        raise typer.Exit(1) from None
     except Exception as e:
-        logger.exception("Image creation failed: %s", e)
-        console.print(f"[bold red]Error:[/bold red] {e}", style="red")
-        raise typer.Exit(1) from e
+        logger.exception("Unexpected error during image creation: %s", e)
+        console.print(
+            f"[bold red]Unexpected error:[/bold red] {e}\n"
+            f"[dim]Please report this issue if it persists.[/dim]",
+            style="red",
+        )
+        raise typer.Exit(1) from None
 
 
 @app.command()
@@ -247,7 +275,7 @@ def info() -> None:
     """Display information about the coloursamples tool."""
     console.print(
         Panel.fit(
-            "[bold cyan]Colour Samples[/bold cyan] v0.1.3\n\n"
+            f"[bold cyan]Colour Samples[/bold cyan] v{__version__}\n\n"
             "A Python utility for generating JPEG images with specified "
             "dimensions and colours.\n\n"
             "[bold]Repository:[/bold] https://github.com/jackemcpherson/colourSamples\n"

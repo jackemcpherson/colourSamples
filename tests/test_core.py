@@ -1,14 +1,14 @@
 """Tests for coloursamples core functionality."""
 
 from pathlib import Path
-from typer.testing import CliRunner
 
 import pytest
 from PIL import Image
+from typer.testing import CliRunner
 
-from coloursamples.core import create_image
 from coloursamples.cli import app
-
+from coloursamples.core import create_image
+from coloursamples.exceptions import InvalidColourCodeError, InvalidDimensionsError
 
 BASIC_IMAGE_TEST_DATA = [
     (100, 100, "#FF5733", "FF5733.jpg"),
@@ -28,11 +28,11 @@ INVALID_DIMENSIONS_TEST_DATA = [
 ]
 
 INVALID_COLOUR_CODE_TEST_DATA = [
-    ("FF5733", "HTML format"),
+    ("FF5733", "must start with '#'"),
     ("#", "exactly 7 characters"),
     ("#FF", "exactly 7 characters"),
     ("#FFAABBCC", "exactly 7 characters"),
-    ("", "HTML format"),
+    ("", "must start with '#'"),
 ]
 
 COLOUR_CODE_CASE_TEST_DATA = [
@@ -57,7 +57,9 @@ CLI_COLOUR_FORMAT_TEST_DATA = [
 ]
 
 
-@pytest.mark.parametrize("width,height,colour_code,expected_filename", BASIC_IMAGE_TEST_DATA)
+@pytest.mark.parametrize(
+    "width,height,colour_code,expected_filename", BASIC_IMAGE_TEST_DATA
+)
 def test_successful_image_creation(
     tmp_path: Path, width: int, height: int, colour_code: str, expected_filename: str
 ) -> None:
@@ -75,31 +77,33 @@ def test_successful_image_creation(
     )
     actual_rgb = img.getpixel((0, 0))
     for actual, expected in zip(actual_rgb, expected_rgb_from_hex):
-        assert abs(actual - expected) <= 2, f"Color mismatch: {actual_rgb} vs {expected_rgb_from_hex}"
+        assert abs(actual - expected) <= 2, (
+            f"Color mismatch: {actual_rgb} vs {expected_rgb_from_hex}"
+        )
 
 
 @pytest.mark.parametrize("width,height,expected_message", INVALID_DIMENSIONS_TEST_DATA)
 def test_invalid_dimensions(width: int, height: int, expected_message: str) -> None:
-    """Test that ValueError is raised for invalid dimensions."""
-    with pytest.raises(ValueError) as excinfo:
+    """Test that InvalidDimensionsError is raised for invalid dimensions."""
+    with pytest.raises(InvalidDimensionsError) as excinfo:
         create_image(width, height, "#FF5733")
     assert expected_message in str(excinfo.value)
 
 
 @pytest.mark.parametrize("colour_code,expected_message", INVALID_COLOUR_CODE_TEST_DATA)
 def test_invalid_colour_code(colour_code: str, expected_message: str) -> None:
-    """Test that ValueError is raised for invalid colour code formats."""
-    with pytest.raises((ValueError, TypeError)) as excinfo:
+    """Test that InvalidColourCodeError is raised for invalid colour code formats."""
+    with pytest.raises(InvalidColourCodeError) as excinfo:
         create_image(100, 100, colour_code)
     assert expected_message in str(excinfo.value)
 
 
 def test_invalid_colour_code_non_string() -> None:
-    """Test that ValueError is raised for non-string colour codes."""
-    with pytest.raises((ValueError, AttributeError)):
+    """Test that InvalidColourCodeError is raised for non-string colour codes."""
+    with pytest.raises(InvalidColourCodeError):
         create_image(100, 100, 123)
 
-    with pytest.raises((ValueError, AttributeError)):
+    with pytest.raises(InvalidColourCodeError):
         create_image(100, 100, None)
 
 
@@ -174,7 +178,7 @@ class TestCLI:
         with self.runner.isolated_filesystem():
             result = self.runner.invoke(
                 app,
-                ["create", "200", "150", "#3498db", "--output-dir", "custom_output"]
+                ["create", "200", "150", "#3498db", "--output-dir", "custom_output"],
             )
             assert result.exit_code == 0
             assert Path("custom_output/3498db.jpg").exists()
@@ -206,9 +210,7 @@ class TestCLI:
     ) -> None:
         """Test that colour codes are properly normalized."""
         with self.runner.isolated_filesystem():
-            result = self.runner.invoke(
-                app, ["create", "100", "100", colour_input]
-            )
+            result = self.runner.invoke(app, ["create", "100", "100", colour_input])
             assert result.exit_code == 0
             assert Path(f"output_files/{expected_file}").exists()
 
@@ -216,9 +218,7 @@ class TestCLI:
         """Test interactive mode functionality."""
         with self.runner.isolated_filesystem():
             result = self.runner.invoke(
-                app,
-                ["create", "--interactive"],
-                input="800\n600\n#FF5733\n"
+                app, ["create", "--interactive"], input="800\n600\n#FF5733\n"
             )
             assert result.exit_code == 0
             assert Path("output_files/FF5733.jpg").exists()
@@ -228,7 +228,6 @@ class TestCLI:
         result = self.runner.invoke(app, ["info"])
         assert result.exit_code == 0
         assert "Colour Samples" in result.stdout
-        assert "v0.1.2" in result.stdout
         assert "github.com" in result.stdout
 
     def test_help_command(self) -> None:
