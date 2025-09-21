@@ -71,31 +71,28 @@ def update_version_files(version: str) -> None:
     Args:
         version: New version string (without 'v' prefix).
     """
-    version_clean = version.lstrip('v')
-    
+    version_clean = version.lstrip("v")
+
     # Parse version tuple
-    version_parts = version_clean.split('.')
+    version_parts = version_clean.split(".")
     if len(version_parts) != 3:
         raise ReleaseError(f"Invalid version format: {version_clean}")
-    
+
     try:
         version_tuple = tuple(int(part) for part in version_parts)
-    except ValueError:
-        raise ReleaseError(f"Version parts must be integers: {version_clean}")
-    
+    except ValueError as e:
+        raise ReleaseError(f"Version parts must be integers: {version_clean}") from e
+
     # Update pyproject.toml
     pyproject_path = Path("pyproject.toml")
     content = pyproject_path.read_text()
-    
+
     # Find and replace version line
     import re
-    content = re.sub(
-        r'version = "[^"]+"',
-        f'version = "{version_clean}"',
-        content
-    )
+
+    content = re.sub(r'version = "[^"]+"', f'version = "{version_clean}"', content)
     pyproject_path.write_text(content)
-    
+
     # Update _version.py
     version_file_path = Path("src/coloursamples/_version.py")
     version_content = f'''"""Version information for coloursamples package."""
@@ -108,8 +105,10 @@ version = __version__
 version_tuple = __version_tuple__
 '''
     version_file_path.write_text(version_content)
-    
-    logger.info("Updated version to %s in pyproject.toml and _version.py", version_clean)
+
+    logger.info(
+        "Updated version to %s in pyproject.toml and _version.py", version_clean
+    )
 
 
 def validate_release_conditions(version: str) -> None:
@@ -214,11 +213,11 @@ def create_release(version: str, message: str) -> None:
 
     validate_release_conditions(version)
     update_version_files(version)
-    
+
     # Commit the version updates
     run_command("git add pyproject.toml src/coloursamples/_version.py")
     run_command(f'git commit -m "Bump version to {version}"')
-    
+
     run_quality_checks()
     create_and_push_tag(version, message)
     build_packages()
