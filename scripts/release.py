@@ -93,7 +93,20 @@ def validate_release_conditions(version: str) -> None:
 
     result = run_command("git status --porcelain")
     if result.stdout.strip():
-        raise ReleaseError("Working directory has uncommitted changes")
+        # Check if only version file is modified (common with hatch-vcs)
+        modified_files = result.stdout.strip().split('\n')
+        version_file_only = all(
+            line.strip().endswith('src/coloursamples/_version.py') 
+            for line in modified_files
+            if line.strip()
+        )
+        
+        if version_file_only and len(modified_files) == 1:
+            logger.info("Only version file modified (likely from hatch-vcs), committing automatically...")
+            run_command("git add src/coloursamples/_version.py")
+            run_command('git commit -m "Auto-update version file for release"')
+        else:
+            raise ReleaseError("Working directory has uncommitted changes")
 
 
 def run_quality_checks() -> None:
