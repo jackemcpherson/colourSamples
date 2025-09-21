@@ -229,9 +229,13 @@ def create_release(version: str, message: str) -> None:
     validate_release_conditions(version)
     update_version_files(version)
 
-    # Commit the version updates
-    run_command("git add pyproject.toml src/coloursamples/_version.py")
-    run_command(f'git commit -m "Bump version to {version}"')
+    # Commit the version updates if there are changes
+    result = run_command("git status --porcelain", check=False)
+    if result.stdout.strip():
+        run_command("git add pyproject.toml src/coloursamples/_version.py")
+        run_command(f'git commit -m "Bump version to {version}"')
+    else:
+        logger.info("No version changes to commit (already at target version)")
 
     run_quality_checks()
     create_and_push_tag(version, message)
