@@ -88,12 +88,22 @@ def update_version_files(version: str) -> None:
     content = pyproject_path.read_text()
 
     # Find and replace version line in [project] section only
-    import re
-
-    # Use a more specific pattern to match only the project version
-    pattern = r'(\[project\].*?\n)(name = "coloursamples"\nversion = ")([^"])+(")'
-    replacement = rf"\1\2{version_clean}\4"
-    content = re.sub(pattern, replacement, content, flags=re.DOTALL)
+    lines = content.split('\n')
+    for i, line in enumerate(lines):
+        if line.strip() == 'version = "0.1.5"' or line.strip().startswith('version = "'):
+            # Make sure we're in the [project] section by checking previous lines
+            project_section = False
+            for j in range(max(0, i-10), i):
+                if '[project]' in lines[j]:
+                    project_section = True
+                elif lines[j].strip().startswith('[') and '[project]' not in lines[j]:
+                    project_section = False
+            
+            if project_section:
+                lines[i] = f'version = "{version_clean}"'
+                break
+    
+    content = '\n'.join(lines)
     pyproject_path.write_text(content)
 
     # Update _version.py
