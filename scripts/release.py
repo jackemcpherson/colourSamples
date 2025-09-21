@@ -87,10 +87,13 @@ def update_version_files(version: str) -> None:
     pyproject_path = Path("pyproject.toml")
     content = pyproject_path.read_text()
 
-    # Find and replace version line
+    # Find and replace version line in [project] section only
     import re
 
-    content = re.sub(r'version = "[^"]+"', f'version = "{version_clean}"', content)
+    # Use a more specific pattern to match only the project version
+    pattern = r'(\[project\].*?\n)(name = "coloursamples"\nversion = ")([^"])+(")'
+    replacement = rf'\1\2{version_clean}\4'
+    content = re.sub(pattern, replacement, content, flags=re.DOTALL)
     pyproject_path.write_text(content)
 
     # Update _version.py
