@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
 name = "coloursamples"
-dynamic = ["version"]
+version = "0.1.5"
 description = "Python utility for generating JPEG images with specified dimensions and colours"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -59,11 +59,6 @@ exclude_also = [
     "@(abc\\.)?abstractmethod",
 ]
 
-[tool.hatch.version]
-source = "vcs"
-
-[tool.hatch.build.hooks.vcs]
-version-file = "src/coloursamples/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/coloursamples"]

@@ -6,6 +6,7 @@ import logging
 import re
 import subprocess
 import sys
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +65,53 @@ def validate_version(version: str) -> bool:
     return bool(re.match(pattern, version))
 
 
+def update_version_files(version: str) -> None:
+    """Update version in pyproject.toml and _version.py files.
+
+    Args:
+        version: New version string (without 'v' prefix).
+    """
+    version_clean = version.lstrip('v')
+    
+    # Parse version tuple
+    version_parts = version_clean.split('.')
+    if len(version_parts) != 3:
+        raise ReleaseError(f"Invalid version format: {version_clean}")
+    
+    try:
+        version_tuple = tuple(int(part) for part in version_parts)
+    except ValueError:
+        raise ReleaseError(f"Version parts must be integers: {version_clean}")
+    
+    # Update pyproject.toml
+    pyproject_path = Path("pyproject.toml")
+    content = pyproject_path.read_text()
+    
+    # Find and replace version line
+    import re
+    content = re.sub(
+        r'version = "[^"]+"',
+        f'version = "{version_clean}"',
+        content
+    )
+    pyproject_path.write_text(content)
+    
+    # Update _version.py
+    version_file_path = Path("src/coloursamples/_version.py")
+    version_content = f'''"""Version information for coloursamples package."""
+
+__version__ = "{version_clean}"
+__version_tuple__ = {version_tuple}
+
+# For backwards compatibility
+version = __version__
+version_tuple = __version_tuple__
+'''
+    version_file_path.write_text(version_content)
+    
+    logger.info("Updated version to %s in pyproject.toml and _version.py", version_clean)
+
+
 def validate_release_conditions(version: str) -> None:
     """Validate conditions required for creating a release.
 
@@ -93,26 +141,7 @@ def validate_release_conditions(version: str) -> None:
 
     result = run_command("git status --porcelain")
     if result.stdout.strip():
-        # Check if only version file is modified (common with hatch-vcs)
-        modified_files = result.stdout.strip().split("\n")
-        version_file_only = all(
-            line.strip().endswith("src/coloursamples/_version.py")
-            for line in modified_files
-            if line.strip()
-        )
-
-        if version_file_only and len(modified_files) == 1:
-            logger.info(
-                "Only version file modified (likely from hatch-vcs), "
-                "committing automatically..."
-            )
-            # Fix any linting issues in the generated version file
-            run_command("uv run ruff format src/coloursamples/_version.py")
-            run_command("uv run ruff check --fix src/coloursamples/_version.py")
-            run_command("git add src/coloursamples/_version.py")
-            run_command('git commit -m "Auto-update version file for release"')
-        else:
-            raise ReleaseError("Working directory has uncommitted changes")
+        raise ReleaseError("Working directory has uncommitted changes")
 
 
 def run_quality_checks() -> None:
@@ -184,6 +213,12 @@ def create_release(version: str, message: str) -> None:
         version = f"v{version}"
 
     validate_release_conditions(version)
+    update_version_files(version)
+    
+    # Commit the version updates
+    run_command("git add pyproject.toml src/coloursamples/_version.py")
+    run_command(f'git commit -m "Bump version to {version}"')
+    
     run_quality_checks()
     create_and_push_tag(version, message)
     build_packages()
