@@ -106,6 +106,9 @@ def validate_release_conditions(version: str) -> None:
                 "Only version file modified (likely from hatch-vcs), "
                 "committing automatically..."
             )
+            # Fix any linting issues in the generated version file
+            run_command("uv run ruff format src/coloursamples/_version.py")
+            run_command("uv run ruff check --fix src/coloursamples/_version.py")
             run_command("git add src/coloursamples/_version.py")
             run_command('git commit -m "Auto-update version file for release"')
         else:
