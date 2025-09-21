@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Build system modernization**: Updated Makefile to use `uv run python` for consistency with modern Python project management
+- **Default output directory**: Changed from `output_files` to current directory (`.`) for simpler usage
+- **Test suite updates**: Updated all tests to reflect new default output directory behavior
+
+### Fixed
+- **Build consistency**: Ensured all build commands use the same Python execution method
+
 ## [0.1.4] - 2025-09-14
 
 ### Added
