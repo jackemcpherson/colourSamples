@@ -49,7 +49,7 @@ clean:
 
 # Run pre-release checks
 pre-release-check:
-	python scripts/pre-release-check.py
+	uv run python scripts/pre-release-check.py
 
 # Create a new release (requires VERSION environment variable)
 release:
@@ -57,8 +57,8 @@ release:
 		echo "Error: VERSION not set. Use: make release VERSION=x.x.x"; \
 		exit 1; \
 	fi
-	python scripts/pre-release-check.py
-	python scripts/release.py $(VERSION)
+	uv run python scripts/pre-release-check.py
+	uv run python scripts/release.py $(VERSION)
 
 # Development workflow helpers
 dev-setup: install

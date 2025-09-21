@@ -147,15 +147,16 @@ def test_string_output_dir(tmp_path: Path) -> None:
 def test_default_output_directory() -> None:
     """Test that default output directory is created when none specified."""
     import os
-    import shutil
 
-    if os.path.exists("output_files"):
-        shutil.rmtree("output_files")
+    # Clean up any existing test file
+    if os.path.exists("123456.jpg"):
+        os.remove("123456.jpg")
 
     create_image(50, 50, "#123456")
-    assert os.path.exists("output_files/123456.jpg")
+    assert os.path.exists("123456.jpg")
 
-    shutil.rmtree("output_files")
+    # Clean up the test file
+    os.remove("123456.jpg")
 
 
 class TestCLI:
@@ -171,7 +172,7 @@ class TestCLI:
             result = self.runner.invoke(app, ["create", "100", "100", "#FF5733"])
             assert result.exit_code == 0
             assert "Image created successfully" in result.stdout
-            assert Path("output_files/FF5733.jpg").exists()
+            assert Path("FF5733.jpg").exists()
 
     def test_create_command_with_output_dir(self) -> None:
         """Test create command with custom output directory."""
@@ -190,7 +191,7 @@ class TestCLI:
                 app, ["create", "50", "50", "#000000", "--verbose"]
             )
             assert result.exit_code == 0
-            assert Path("output_files/000000.jpg").exists()
+            assert Path("000000.jpg").exists()
 
     def test_create_command_invalid_dimensions(self) -> None:
         """Test create command with invalid dimensions."""
@@ -212,7 +213,7 @@ class TestCLI:
         with self.runner.isolated_filesystem():
             result = self.runner.invoke(app, ["create", "100", "100", colour_input])
             assert result.exit_code == 0
-            assert Path(f"output_files/{expected_file}").exists()
+            assert Path(expected_file).exists()
 
     def test_interactive_mode(self) -> None:
         """Test interactive mode functionality."""
@@ -221,7 +222,7 @@ class TestCLI:
                 app, ["create", "--interactive"], input="800\n600\n#FF5733\n"
             )
             assert result.exit_code == 0
-            assert Path("output_files/FF5733.jpg").exists()
+            assert Path("FF5733.jpg").exists()
 
     def test_info_command(self) -> None:
         """Test info command displays version and repository info."""

@@ -179,7 +179,7 @@ def _display_success_message(
         colour: Normalized colour code with # prefix.
         output_dir: Directory where image was saved or None for default.
     """
-    output_path = output_dir or Path("output_files")
+    output_path = output_dir or Path(".")
     filename = colour.lstrip("#") + ".jpg"
     full_path = output_path / filename
 
@@ -211,7 +211,7 @@ def create(
         typer.Option(
             "--output-dir",
             "-o",
-            help="Directory to save the image (default: output_files)",
+            help="Directory to save the image (default: current directory)",
         ),
     ] = None,
     interactive: Annotated[

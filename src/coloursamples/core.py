@@ -28,7 +28,7 @@ def create_image(
         height: The height of the image in pixels.
         colour_code: The HTML colour code for the image background.
         output_dir: The directory to save the image. Accepts a string path or
-            pathlib.Path. Defaults to "output_files".
+            pathlib.Path. Defaults to current directory.
 
     Raises:
         InvalidDimensionsError: If width/height are not positive or exceed limits.
@@ -103,7 +103,7 @@ def _validate_colour_code(colour_code: str) -> None:
 def _resolve_output_path(output_dir: str | Path | None) -> Path:
     """Convert output directory to Path object with default fallback."""
     if output_dir is None:
-        return Path("output_files")
+        return Path(".")
     return Path(output_dir)
 
 
